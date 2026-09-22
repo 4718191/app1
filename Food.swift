@@ -13,11 +13,13 @@ class Food {
     var name: String
     var expiryDate: Date
     var category: FoodCategory
+    var imageData: Data?
 
-    init(name: String, expiryDate: Date, category: FoodCategory = .fridge) {
+    init(name: String, expiryDate: Date, category: FoodCategory = .fridge, imageData: Data? = nil) {
         self.name = name
         self.expiryDate = expiryDate
         self.category = category
+        self.imageData = imageData
     }
 
     var daysRemaining: Int {
