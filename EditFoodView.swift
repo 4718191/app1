@@ -11,6 +11,11 @@ struct EditFoodView: View {
             Form {
                 TextField("음식 이름", text: $food.name)
                 DatePicker("유통기한", selection: $food.expiryDate, displayedComponents: .date)
+                Picker("보관 방법", selection: $food.category) {
+                    ForEach(FoodCategory.allCases, id: \.self) { cat in
+                        Text(cat.rawValue).tag(cat)
+                    }
+                }
             }
             .navigationTitle("항목 수정")
             .toolbar {
