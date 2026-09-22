@@ -43,11 +43,16 @@
 - Swift Charts — 통계 화면의 막대그래프
 
 ## 데이터 모델
-- Food 항목은 다음 정보를 가집니다.
-name: 음식 이름
-expiryDate: 유통기한
-category: 보관 방법 (냉장 / 냉동 / 실온)
-imageData: 첨부 사진 (선택)
+Food 항목은 다음 정보를 가집니다.
+
+| data | name |
+|---|---|
+| name | 음식 이름 |
+| expiryDate | 유통기한 |
+| category | 보관 방법 (냉장 / 냉동 / 실온) |
+| imageData | 첨부 사진 (선택) |
+
+
 
 ## 실행 방법
 1. Xcode에서 프로젝트 열기
