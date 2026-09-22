@@ -37,15 +37,31 @@ struct ContentView: View {
                         NavigationLink {
                             EditFoodView(food: food)
                         } label: {
-                            VStack(alignment: .leading) {
-                                Text(food.name)
-                                    .font(.headline)
-                                Text("\(food.category.rawValue) · \(food.expiryDate.formatted(date: .abbreviated, time: .omitted))")
-                                    .font(.subheadline)
-                                    .foregroundStyle(statusColor(for: food))
+                            HStack {
+                                if let imageData = food.imageData, let uiImage = UIImage(data: imageData) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 44, height: 44)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                } else {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(.gray.opacity(0.2))
+                                        .frame(width: 44, height: 44)
+                                        .overlay(Image(systemName: "photo").foregroundStyle(.gray))
+                                }
+
+                                VStack(alignment: .leading) {
+                                    Text(food.name)
+                                        .font(.headline)
+                                    Text("\(food.category.rawValue) · \(food.expiryDate.formatted(date: .abbreviated, time: .omitted))")
+                                        .font(.subheadline)
+                                        .foregroundStyle(statusColor(for: food))
+                                }
                             }
                         }
                     }
+                    .onDelete(perform: deleteFood)
                     .onDelete(perform: deleteFood)
                 }
             }
