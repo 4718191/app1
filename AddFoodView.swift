@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UserNotifications
+import PhotosUI
 
 struct AddFoodView: View {
     @Environment(\.modelContext) private var modelContext
@@ -9,6 +10,8 @@ struct AddFoodView: View {
     @State private var name = ""
     @State private var expiryDate = Date()
     @State private var category: FoodCategory = .fridge
+    @State private var selectedItem: PhotosPickerItem?
+    @State private var imageData: Data?
 
     var body: some View {
         NavigationStack {
@@ -18,6 +21,19 @@ struct AddFoodView: View {
                 Picker("보관 방법", selection: $category) {
                     ForEach(FoodCategory.allCases, id: \.self) { cat in
                         Text(cat.rawValue).tag(cat)
+                    }
+                }
+
+                Section {
+                    PhotosPicker(selection: $selectedItem, matching: .images) {
+                        if let imageData, let uiImage = UIImage(data: imageData) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 150)
+                        } else {
+                            Label("사진 추가", systemImage: "camera")
+                        }
                     }
                 }
             }
@@ -30,13 +46,20 @@ struct AddFoodView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") {
-                        let newFood = Food(name: name, expiryDate: expiryDate, category: category)
+                        let newFood = Food(name: name, expiryDate: expiryDate, category: category, imageData: imageData)
                         modelContext.insert(newFood)
                         try? modelContext.save()
                         scheduleNotification(for: newFood)
                         dismiss()
                     }
                     .disabled(name.isEmpty)
+                }
+            }
+            .onChange(of: selectedItem) { _, newItem in
+                Task {
+                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                        imageData = data
+                    }
                 }
             }
         }
