@@ -11,6 +11,11 @@ struct MainTabView: View {
                     Label("목록", systemImage: "list.bullet")
                 }
 
+            StatsView()
+                .tabItem {
+                    Label("통계", systemImage: "chart.bar")
+                }
+
             SettingsView()
                 .tabItem {
                     Label("설정", systemImage: "gearshape")
