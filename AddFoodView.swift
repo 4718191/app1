@@ -8,12 +8,18 @@ struct AddFoodView: View {
 
     @State private var name = ""
     @State private var expiryDate = Date()
+    @State private var category: FoodCategory = .fridge
 
     var body: some View {
         NavigationStack {
             Form {
                 TextField("음식 이름", text: $name)
                 DatePicker("유통기한", selection: $expiryDate, displayedComponents: .date)
+                Picker("보관 방법", selection: $category) {
+                    ForEach(FoodCategory.allCases, id: \.self) { cat in
+                        Text(cat.rawValue).tag(cat)
+                    }
+                }
             }
             .navigationTitle("새 항목 추가")
             .toolbar {
@@ -24,7 +30,7 @@ struct AddFoodView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("저장") {
-                        let newFood = Food(name: name, expiryDate: expiryDate)
+                        let newFood = Food(name: name, expiryDate: expiryDate, category: category)
                         modelContext.insert(newFood)
                         try? modelContext.save()
                         scheduleNotification(for: newFood)
@@ -35,7 +41,7 @@ struct AddFoodView: View {
             }
         }
     }
-    
+
     func scheduleNotification(for food: Food) {
         guard let notifyDate = Calendar.current.date(byAdding: .day, value: -1, to: food.expiryDate) else { return }
 
