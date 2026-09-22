@@ -7,32 +7,47 @@ struct ContentView: View {
     @Query(sort: \Food.expiryDate) private var foods: [Food]
     @State private var showingAddSheet = false
     @State private var searchText = ""
+    @State private var selectedCategory: FoodCategory? = nil
 
     var filteredFoods: [Food] {
-        if searchText.isEmpty {
-            return foods
-        } else {
-            return foods.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        var result = foods
+        if let selectedCategory {
+            result = result.filter { $0.category == selectedCategory }
         }
+        if !searchText.isEmpty {
+            result = result.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+        return result
     }
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(filteredFoods) { food in
-                    NavigationLink {
-                        EditFoodView(food: food)
-                    } label: {
-                        VStack(alignment: .leading) {
-                            Text(food.name)
-                                .font(.headline)
-                            Text(food.expiryDate.formatted(date: .abbreviated, time: .omitted))
-                                .font(.subheadline)
-                                .foregroundStyle(statusColor(for: food))
-                        }
+            VStack(spacing: 0) {
+                Picker("카테고리", selection: $selectedCategory) {
+                    Text("전체").tag(FoodCategory?.none)
+                    ForEach(FoodCategory.allCases, id: \.self) { cat in
+                        Text(cat.rawValue).tag(FoodCategory?.some(cat))
                     }
                 }
-                .onDelete(perform: deleteFood)
+                .pickerStyle(.segmented)
+                .padding()
+
+                List {
+                    ForEach(filteredFoods) { food in
+                        NavigationLink {
+                            EditFoodView(food: food)
+                        } label: {
+                            VStack(alignment: .leading) {
+                                Text(food.name)
+                                    .font(.headline)
+                                Text("\(food.category.rawValue) · \(food.expiryDate.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(.subheadline)
+                                    .foregroundStyle(statusColor(for: food))
+                            }
+                        }
+                    }
+                    .onDelete(perform: deleteFood)
+                }
             }
             .navigationTitle("유통기한 관리")
             .searchable(text: $searchText, prompt: "음식 이름 검색")
