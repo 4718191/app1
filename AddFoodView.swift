@@ -12,11 +12,18 @@ struct AddFoodView: View {
     @State private var category: FoodCategory = .fridge
     @State private var selectedItem: PhotosPickerItem?
     @State private var imageData: Data?
+    @State private var showingScanner = false
+    @State private var isLookingUp = false
 
     var body: some View {
         NavigationStack {
             Form {
                 TextField("음식 이름", text: $name)
+                Button {
+                    showingScanner = true
+                } label: {
+                    Label("바코드로 스캔하기", systemImage: "barcode.viewfinder")
+                }
                 DatePicker("유통기한", selection: $expiryDate, displayedComponents: .date)
                 Picker("보관 방법", selection: $category) {
                     ForEach(FoodCategory.allCases, id: \.self) { cat in
@@ -62,6 +69,16 @@ struct AddFoodView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showingScanner) {
+                BarcodeScannerView { code in
+                    lookupProduct(barcode: code)
+                }
+            }
+            .alert("상품 정보를 찾을 수 없어요", isPresented: $showingNotFoundAlert) {
+                Button("확인", role: .cancel) {}
+            } message: {
+                Text("바코드는 인식했지만 데이터베이스에 등록된 상품 정보가 없어요. 이름을 직접 입력해주세요.")
+            }
         }
     }
 
@@ -80,5 +97,33 @@ struct AddFoodView: View {
         let request = UNNotificationRequest(identifier: food.id.uuidString, content: content, trigger: trigger)
 
         UNUserNotificationCenter.current().add(request)
+    }
+    
+    @State private var showingNotFoundAlert = false
+
+    func lookupProduct(barcode: String) {
+        isLookingUp = true
+        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else {
+            isLookingUp = false
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            defer { DispatchQueue.main.async { isLookingUp = false } }
+            guard let data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let product = json["product"] as? [String: Any],
+                  let productName = product["product_name"] as? String,
+                  !productName.isEmpty else {
+                DispatchQueue.main.async {
+                    showingNotFoundAlert = true
+                }
+                return
+            }
+
+            DispatchQueue.main.async {
+                name = productName
+            }
+        }.resume()
     }
 }
